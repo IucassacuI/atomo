@@ -145,7 +145,7 @@ void drawtree(void){
 		char *feedtoken = strtok(feedcopy, ",");
 		while(feedtoken != NULL){
 			char command[1000];
-			snprintf(command, 1000, "librarian.exe --feed %s --metadata", feedtoken);
+			snprintf(command, 1000, "librarian.exe --feed \"%s\" --metadata", feedtoken);
 
 			char title[100];
 			

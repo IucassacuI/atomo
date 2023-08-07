@@ -134,7 +134,7 @@ int addfeed_cb(void){
 	if(status == 0)
 		return IUP_DEFAULT;
 	char command1[1000];
-	snprintf(command1, 1000, "librarian.exe --feed %s --update", url);
+	snprintf(command1, 1000, "librarian.exe --feed \"%s\" --update", url);
 	
 	status = system(command1);
 
@@ -178,7 +178,7 @@ int addfeed_cb(void){
 	}
 
 	char command2[1000];
-	snprintf(command2, 1000, "librarian.exe --feed %s --metadata", url);
+	snprintf(command2, 1000, "librarian.exe --feed \"%s\" --metadata", url);
 
 	char leaf[50];
 	snprintf(leaf, 50, "ADDLEAF%d", selected);
@@ -294,7 +294,7 @@ void setmetadata(void){
 	char *feed = getcurrfeed();
 
 	char command[1000];
-	snprintf(command, 1000, "librarian.exe --feed %s --metadata", feed);
+	snprintf(command, 1000, "librarian.exe --feed \"%s\" --metadata", feed);
 
 	FILE *pipe = popen(command, "r");
 	if(pipe == NULL){
@@ -341,7 +341,7 @@ void obscure(char *feed){
 	Ihandle *tree = IupGetHandle("tree");
 
 	char command[1000];
-	snprintf(command, 1000, "librarian.exe --feed %s --metadata", feed);
+	snprintf(command, 1000, "librarian.exe --feed \"%s\" --metadata", feed);
 
 	FILE *pipe = popen(command, "r");
 
@@ -393,7 +393,7 @@ int feedselection_cb(Ihandle *h, int selected, int status){
 	obscure(feed);
 
 	char command[1000];
-	snprintf(command, 1000, "librarian.exe --feed %s --items", feed);
+	snprintf(command, 1000, "librarian.exe --feed \"%s\" --items", feed);
 
 	FILE *pipe = popen(command, "r");
 
@@ -426,7 +426,7 @@ void setitem(int pos){
 	char *feed = getcurrfeed();
 	
 	char command[1000];
-	snprintf(command, 1000, "librarian.exe --feed %s --item %d", feed, pos);
+	snprintf(command, 1000, "librarian.exe --feed \"%s\" --item %d", feed, pos);
 
 	FILE *pipe = popen(command, "r");
 
@@ -480,7 +480,7 @@ void updatefeed(void){
 	char *feed = getcurrfeed();
 
 	char command[1000];
-	snprintf(command, 1000, "librarian.exe --feed %s -update", feed);
+	snprintf(command, 1000, "librarian.exe --feed \"%s\" -update", feed);
 	
 	FILE *pipe = popen(command, "r");
 
@@ -623,7 +623,7 @@ void updatefeeds(void){
 		while(feedtoken != NULL){
 
 			char command[1000];
-			snprintf(command, 1000, "librarian.exe --feed %s --update", feedtoken);
+			snprintf(command, 1000, "librarian.exe --feed \"%s\" --update", feedtoken);
 			FILE *pipe = popen(command, "r");
 			char result[10];
 			fgets(result, 10, pipe);

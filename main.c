@@ -1,6 +1,8 @@
 #include <iup.h>
 #include <iup_config.h>
 #include <stdlib.h>
+#include <math.h>
+#include "helpers.h"
 #include "ui.h"
 
 Ihandle *hbox, *dialog;
@@ -8,9 +10,7 @@ Ihandle *config;
 
 int main(int argc, char **argv){
 	IupOpen(&argc, &argv);
-
 	IupSetGlobal("UTF8MODE", "YES");
-
 	IupSetLanguage("PORTUGUESE");
 
 	config = IupConfig();
@@ -63,6 +63,7 @@ int main(int argc, char **argv){
 
 	Ihandle *container = IupHbox(filler4, vbox, NULL);
 	hbox = IupHbox(tree, container, NULL);
+	IupSetHandle("hbox", hbox);
 	dialog = IupDialog(hbox);
 
 	IupSetAttributes(dialog, "SIZE=HALFxHALF, TITLE=Atomo");

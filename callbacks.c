@@ -40,7 +40,7 @@ int addcat_cb(void){
 	categories = IupConfigGetVariableStr(config, "CAT", "LIST");
 
 	char new[CAT_LIMIT];
-	snprintf(new, NEWFEED_LIMIT, "%s,", cat);
+	snprintf(new, CAT_LIMIT, "%s,", cat);
 	
 	if(!categories){
 		IupConfigSetVariableStr(config, "CAT", "LIST", new);

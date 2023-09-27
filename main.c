@@ -20,7 +20,6 @@ int main(int argc, char **argv){
 
 	int interval = IupConfigGetVariableInt(config, "TIMER", "INTERVAL");
 	int unity = IupConfigGetVariableInt(config, "TIMER", "UNITY");
-
 	int time = (interval*1000)*pow(60, unity+1);
 
 	Ihandle *timer = IupTimer();
@@ -64,8 +63,8 @@ int main(int argc, char **argv){
 	Ihandle *container = IupHbox(filler4, vbox, NULL);
 	hbox = IupHbox(tree, container, NULL);
 	IupSetHandle("hbox", hbox);
-	dialog = IupDialog(hbox);
 
+	dialog = IupDialog(hbox);
 	IupSetAttributes(dialog, "SIZE=HALFxHALF, TITLE=Atomo");
 	IupSetHandle("dialog", dialog);
 
@@ -73,13 +72,16 @@ int main(int argc, char **argv){
 
 	IupShowXY(dialog, IUP_CENTER, IUP_CENTER);
 
-     	drawtree();
+	drawtree();
+	
+	Ihandle *thread = IupThread();
+	IupSetCallback(thread, "THREAD_CB", (Icallback) updatefeeds);
+	IupSetAttribute(thread, "START", "YES");
 
 	IupMainLoop();
 
 	IupConfigSave(config);
 	IupDestroy(config);
-
 	IupDestroy(timer);
 
 	IupClose();

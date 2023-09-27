@@ -3,6 +3,12 @@
 #ifndef CALLBACKS
 #define CALLBACKS
 
+#define ATTR_LIMIT 50
+#define CAT_LIMIT 50
+#define TITLE_LIMIT 1000
+#define URL_LIMIT 500
+#define CMD_LIMIT 1000
+
 int opmlimport_cb(void);
 int opmlexport_cb(void);
 int exit_cb(void);

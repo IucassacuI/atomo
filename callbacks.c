@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <iup.h>
 #include <iup_config.h>
-#include <ctype.h>
-#include <stdbool.h>
 #include <math.h>
 #include "callbacks.h"
 #include "helpers.h"
@@ -29,7 +27,7 @@ int addcat_cb(void){
 	Ihandle *tree = IupGetHandle("tree");
 	Ihandle *config = IupGetHandle("config");
 
-	char cat[50] = "N/A";
+	char cat[CAT_LIMIT] = "N/A";
 	const char *categories;
 
 	int status = IupGetParam("Adicionar categoria", NULL, 0, "%s\n", &cat);
@@ -41,16 +39,16 @@ int addcat_cb(void){
 	
 	categories = IupConfigGetVariableStr(config, "CAT", "LIST");
 
-	char new[50];
-	snprintf(new, 50, "%s,", cat);
+	char new[CAT_LIMIT];
+	snprintf(new, NEWFEED_LIMIT, "%s,", cat);
 	
 	if(!categories){
 		IupConfigSetVariableStr(config, "CAT", "LIST", new);
 		return IUP_DEFAULT;
 	}
 
-	char *list = calloc(strlen(categories)+50, sizeof(char));
-	strncpy(list, categories, strlen(categories)+50);
+	char *list = calloc(strlen(categories)+CAT_LIMIT, sizeof(char));
+	strncpy(list, categories, strlen(categories)+CAT_LIMIT-1);
 
 	strncat(list, new, strlen(list));
 	IupConfigSetVariableStr(config, "CAT", "LIST", list);
@@ -66,11 +64,11 @@ int remocat_cb(void){
 
 	int selected = IupGetInt(tree, "VALUE");
 
-	char kindattr[50];
-	snprintf(kindattr, 50, "KIND%d", selected);
+	char kindattr[ATTR_LIMIT];
+	snprintf(kindattr, ATTR_LIMIT, "KIND%d", selected);
 
-	char titleattr[50];
-	snprintf(titleattr, 50, "TITLE%d", selected);
+	char titleattr[ATTR_LIMIT];
+	snprintf(titleattr, ATTR_LIMIT, "TITLE%d", selected);
 
 	char *kind = IupGetAttribute(tree, kindattr);
 	char *title = IupGetAttribute(tree, titleattr);
@@ -96,10 +94,10 @@ int remocat_cb(void){
 
 	char *cattoken = strtok(copy, ",");
 
-	char formatted[50];
+	char formatted[CAT_LIMIT];
 
-	while(cattoken != NULL && isalpha(cattoken[0])){
-		snprintf(formatted, 50, "%s,", cattoken);
+	while(cattoken != NULL){
+		snprintf(formatted, CAT_LIMIT, "%s,", cattoken);
 
 		if(strcmp(title, cattoken))
 			strncat(new, formatted, strlen(categories));
@@ -122,8 +120,8 @@ int addfeed_cb(void){
 	
 	int selected = IupGetInt(tree, "VALUE");
 
-	char kindattr[50];
-	snprintf(kindattr, 50, "KIND%d", selected);
+	char kindattr[ATTR_LIMIT];
+	snprintf(kindattr, ATTR_LIMIT, "KIND%d", selected);
 
 	char *kind = IupGetAttribute(tree, kindattr);
 
@@ -132,18 +130,25 @@ int addfeed_cb(void){
 		return IUP_DEFAULT;
 	}
 	
-	char url[500] = "N/A";
+	char url[URL_LIMIT] = "N/A";
+
+	Ihandle *clipboard = IupClipboard();
+
+	char *text = IupGetAttribute(clipboard, "TEXT");
+
+	if(text != NULL && (strstr(text, "https://") != NULL || strstr(text, "http://") != NULL))
+		strncpy(url, text, URL_LIMIT);
+
+	IupDestroy(clipboard);
 
 	int status = IupGetParam("Adicionar feed", NULL, 0, "%s\n", &url);
 
 	if(status == 0)
 		return IUP_DEFAULT;
 
-	char command1[1000];
-	snprintf(command1, 1000, "librarian.exe --feed \"%s\" --update", url);
-	
+	char command1[CMD_LIMIT];
+	snprintf(command1, CMD_LIMIT, "librarian.exe --feed \"%s\" --update", url);	
 	status = librarian(command1);
-	remove("out");
 
 	switch(status){
 	case 1:
@@ -163,43 +168,38 @@ int addfeed_cb(void){
 		return IUP_DEFAULT;
 	}
 
-	char titleattr[50];
-	snprintf(titleattr, 50, "TITLE%d", selected);
+	char titleattr[ATTR_LIMIT];
+	snprintf(titleattr, ATTR_LIMIT, "TITLE%d", selected);
 
 	char *category = IupGetAttribute(tree, titleattr);
-
 	const char *list = IupConfigGetVariableStr(config, "CAT", category);
 
-	char item[500];
-	snprintf(item, 500, "%s,", url);
+	char item[URL_LIMIT];
+	snprintf(item, URL_LIMIT, "%s,", url);
 
 	if(!list){
 		IupConfigSetVariableStr(config, "CAT", category, item);
 	} else {
-		char *copy = calloc(strlen(list)+500, sizeof(char));
-		strncpy(copy, list, strlen(list)+500);
-		strncat(copy, item, strlen(list)+500);
+		char *copy = calloc(strlen(list)+URL_LIMIT, sizeof(char));
+		strncpy(copy, list, strlen(list)+URL_LIMIT);
+		strncat(copy, item, strlen(list)+URL_LIMIT);
 
 		IupConfigSetVariableStr(config, "CAT", category, copy);
 		free(copy);
 	}
 
-	char command2[1000];
-	snprintf(command2, 1000, "librarian.exe --feed \"%s\" --metadata", url);
-
+	char command2[CMD_LIMIT];
+	snprintf(command2, CMD_LIMIT, "librarian.exe --feed \"%s\" --metadata", url);
 	librarian(command2);
 
-	char leaf[50];
-	snprintf(leaf, 50, "ADDLEAF%d", selected);
+	char leaf[ATTR_LIMIT];
+	snprintf(leaf, TITLE_LIMIT, "ADDLEAF%d", selected);
 
-	char title[100];
+	char title[TITLE_LIMIT];
 
 	FILE *out = fopen("out", "r");
-	
-	fgets(title, 100, out);
-
+	fgets(title, TITLE_LIMIT, out);
 	fclose(out);
-	remove("out");
 
 	IupSetAttribute(tree, leaf, title);
 
@@ -213,7 +213,7 @@ int addfeed_cb(void){
 	int selected = IupGetInt(tree, "VALUE");
 
 	char kindattr[50];
-	snprintf(kindattr, 50, "KIND%d", selected);
+	snprintf(kindattr, ATTR_LIMIT, "KIND%d", selected);
 
 	char *kind = IupGetAttribute(tree, kindattr);
 
@@ -222,13 +222,13 @@ int addfeed_cb(void){
 		return IUP_DEFAULT;
 	}
 
-	char parentattr[50];
-	snprintf(parentattr, 50, "PARENT%d", selected);
+	char parentattr[ATTR_LIMIT];
+	snprintf(parentattr, ATTR_LIMIT, "PARENT%d", selected);
 
 	int catid = IupGetInt(tree, parentattr);
 
-	char titleattr[50];
-	snprintf(titleattr, 50, "TITLE%d", catid);
+	char titleattr[ATTR_LIMIT];
+	snprintf(titleattr, ATTR_LIMIT, "TITLE%d", catid);
 
 	char *category = IupGetAttribute(tree, titleattr);
 	const char *feeds = IupConfigGetVariableStr(config, "CAT", category);
@@ -240,11 +240,11 @@ int addfeed_cb(void){
 
 	char *token = strtok(copy, ",");
 	char *currfeed = getcurrfeed();
-	char feed[500];
+	char feed[URL_LIMIT];
 
 	while(token != NULL){
 		if(strcmp(token, currfeed) != 0){
-			snprintf(feed, 500, "%s,", token);
+			snprintf(feed, URL_LIMIT, "%s,", token);
 			strncat(new, feed, strlen(feeds));
 		}
 		token = strtok(NULL, ",");
@@ -253,6 +253,10 @@ int addfeed_cb(void){
 	IupConfigSetVariableStr(config, "CAT", category, new);
 
 	IupSetAttribute(tree, "DELNODE", "SELECTED");
+
+	char command[CMD_LIMIT];
+	snprintf(command, CMD_LIMIT, "librarian.exe --feed %s --remove", currfeed);
+	librarian(command);
 
 	free(copy);
 	free(new);
@@ -266,34 +270,32 @@ int feedselection_cb(Ihandle *h, int selected, int status){
 
 	IupSetAttribute(list, "1", NULL);
 
-	char kindattr[50];
-	snprintf(kindattr, 50, "KIND%d", selected);
+	char kindattr[ATTR_LIMIT];
+	snprintf(kindattr, ATTR_LIMIT, "KIND%d", selected);
 
 	char *kind = IupGetAttribute(tree, kindattr);
 
 	if(strcmp(kind, "BRANCH") == 0 || status == 0)
 		return IUP_DEFAULT;
 
-		
 	setmetadata();
 
 	char *feed = getcurrfeed();
 
 	obscure(feed);
 
-	char command[1000];
-	snprintf(command, 1000, "librarian.exe --feed \"%s\" --items", feed);
-
+	char command[CMD_LIMIT];
+	snprintf(command, CMD_LIMIT, "librarian.exe --feed \"%s\" --items", feed);
 	librarian(command);
 
 	FILE *out = fopen("out", "r");
 
-	char *item = malloc(1000);
+	char *item = malloc(TITLE_LIMIT);
 
 	int counter = 0;
 	char cstr[5];
 
-	while(fgets(item, 1000, out)){
+	while(fgets(item, TITLE_LIMIT, out)){
 		counter++;
 		snprintf(cstr, 5, "%d", counter);
 
@@ -301,11 +303,8 @@ int feedselection_cb(Ihandle *h, int selected, int status){
 		IupMap(list);
 		IupRefresh(itembox);
 	}
-
 	free(item);
-
 	fclose(out);	
-	remove("out");
 
 	return IUP_DEFAULT;
 }
@@ -324,11 +323,11 @@ int rclick_cb(Ihandle *h, int id){
 	Ihandle *tree = IupGetHandle("tree");
 	IupSetInt(tree, "VALUE", id);
 
-	char kindattr[10];
-	snprintf(kindattr, 10, "KIND%d", id);
+	char kindattr[ATTR_LIMIT];
+	snprintf(kindattr, ATTR_LIMIT, "KIND%d", id);
 
-	char kind[50];
-	snprintf(kind, 50, "%s", IupGetAttribute(tree, kindattr));
+	char kind[ATTR_LIMIT];
+	snprintf(kind, ATTR_LIMIT, "%s", IupGetAttribute(tree, kindattr));
 
 	if((strcmp(kind, "LEAF") != 0) && (id != 0))
 		return IUP_DEFAULT;
@@ -346,15 +345,11 @@ int rclick_cb(Ihandle *h, int id){
 		IupSetCallback(upitem, "ACTION", (Icallback) updatefeeds);
 	else
 		IupSetCallback(upitem, "ACTION", (Icallback) updatefeed);
-	
+
 	IupPopup(menu, IUP_MOUSEPOS, IUP_MOUSEPOS);
 	feedselection_cb(NULL, id, 1);
 
-	if(id == 0)
-		IupMessage("Notificação", "Atualizados");
-
 	return IUP_DEFAULT;
-
 }
 
 int themes_cb(void){

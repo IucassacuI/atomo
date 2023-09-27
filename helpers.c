@@ -22,7 +22,6 @@ char *getcurrfeed(void){
 	snprintf(titleattr, 50, "TITLE%d", parentid);
 
 	char *cat = IupGetAttribute(tree, titleattr);
-
 	const char *feeds = IupConfigGetVariableStr(config, "CAT", cat);
 
 	char *copy = calloc(strlen(feeds), sizeof(char));
@@ -79,7 +78,6 @@ void setmetadata(void){
 	fgets(updated, 100, out);
 
 	fclose(out);
-	remove("out");
 
 	Ihandle *feedupdated = IupGetHandle("feedupdated");
 	IupSetStrAttribute(feedupdated, "TITLE", updated);
@@ -102,18 +100,17 @@ void obscure(char *feed){
 	fgets(title, 100, out);
 
 	fclose(out);
-	remove("out");
 	
 	int nodes = IupGetInt(tree, "COUNT");
 
 	char titleattr[50];
 	char name[100];
 	for(int node = 0; node < nodes; node++){
-	snprintf(titleattr, 50, "TITLE%d", node);
-	snprintf(name, 100, "%s", IupGetAttribute(tree, titleattr));
+		snprintf(titleattr, 50, "TITLE%d", node);
+		snprintf(name, 100, "%s", IupGetAttribute(tree, titleattr));
 
-	if(!strcmp(title, name))
-		nodes = node;
+		if(!strcmp(title, name))
+			nodes = node;
 	}
 
 	char colorattr[50];
@@ -132,7 +129,6 @@ void setitem(int pos){
 	
 	char command[1000];
 	snprintf(command, 1000, "librarian.exe --feed \"%s\" --item %d", feed, pos);
-
 	librarian(command);
 
 	FILE *out = fopen("out", "r");
@@ -166,15 +162,13 @@ void setitem(int pos){
 	IupRefresh(entrybox);
 
 	fclose(out);
-	remove("out");
 }
 
 void updatefeed(void){
 	char *feed = getcurrfeed();
 
 	char command[1000];
-	snprintf(command, 1000, "librarian.exe --feed \"%s\" -update", feed);
-	
+	snprintf(command, 1000, "librarian.exe --feed \"%s\" -update", feed);	
 	int exitcode = librarian(command);
 
 	FILE *out = fopen("out", "r");
@@ -183,8 +177,6 @@ void updatefeed(void){
 	fgets(status, 10, out);
 
 	fclose(out);
-
-	remove("out");
 
 	if(exitcode == 2){
 		IupMessageError(NULL, "Erro de rede.");
@@ -206,7 +198,6 @@ void updatefeed(void){
 void highlight(char *feedurl){
 	char command[1000];
 	snprintf(command, 1000, "librarian.exe --feed \"%s\" --metadata", feedurl);
-
 	librarian(command);
 
 	FILE *out = fopen("out", "r");
@@ -215,7 +206,6 @@ void highlight(char *feedurl){
 	fgets(name, 100, out);
 
 	fclose(out);
-	remove("out");
 
 	Ihandle *tree = IupGetHandle("tree");
 	int nodes = IupGetInt(tree, "COUNT");
@@ -265,16 +255,14 @@ void updatefeeds(void){
 		char command[1000];
 		while(feedtoken != NULL){
 			snprintf(command, 1000, "librarian.exe --feed \"%s\" --update", feedtoken);
-
-			librarian(command);
+			int exitcode = librarian(command);
 
 			FILE *out = fopen("out", "r");
 
 			char result[10];
 			fgets(result, 10, out);
 
-			int exitcode = fclose(out);
-			remove("out");
+			fclose(out);
 
 			switch(exitcode){
 				case 2:
@@ -299,6 +287,12 @@ void updatefeeds(void){
 }
 
 int librarian(char *command){
+	FILE *fp = fopen("out", "r");
+	fclose(fp);
+
+	if(fp != NULL)
+		remove("out");
+
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 
@@ -307,11 +301,9 @@ int librarian(char *command){
 	ZeroMemory(&pi, sizeof(pi));
 
 	CreateProcess(NULL, command, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
-
 	WaitForSingleObject(pi.hProcess, INFINITE);
 
 	DWORD exitcode = 0;
-
 	GetExitCodeProcess(pi.hProcess, &exitcode);
 
 	CloseHandle(pi.hProcess);

@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 #include <iup.h>
 #include <iup_config.h>
 #include "ui.h"
@@ -47,7 +46,7 @@ void drawmenu(void){
 	IupSetCallback(themes_item, "ACTION", (Icallback) themes_cb);
 	IupSetCallback(timer_item, "ACTION", (Icallback) timer_cb);
 	IupSetCallback(switch_item, "ACTION", (Icallback) switch_cb);
-	
+
 	oitems = IupMenu(themes_item, timer_item, switch_item, NULL);
 	options_submenu = IupSubmenu("&Opções", oitems);
 
@@ -60,6 +59,8 @@ void inittree(void){
 	Ihandle *tree = IupTree();
 	IupSetAttribute(tree, "MAXSIZE", "150x");
 	IupSetCallback(tree, "RIGHTCLICK_CB",(Icallback) rclick_cb);
+	IupSetCallback(tree, "SELECTION_CB", (Icallback) feedselection_cb);
+
 	IupSetHandle("tree", tree);
 }
 
@@ -67,7 +68,7 @@ void inititembox(void){
 	Ihandle *label = IupLabel("Item: ");
 
 	Ihandle *list = IupList(NULL);
-	IupSetAttributes(list, "DROPDOWN=YES, SIZE=150, VISIBLEITEMS=10");
+	IupSetAttributes(list, "DROPDOWN=YES, SIZE=150, VISIBLEITEMS=10, DROPEXPAND=NO");
 	IupSetCallback(list, "ACTION", (Icallback) itemselection_cb);
 	IupSetHandle("list", list);
 
@@ -109,19 +110,14 @@ void drawtree(void){
 	Ihandle *config = IupGetHandle("config");
 	Ihandle *tree = IupGetHandle("tree");
 
-	IupSetCallback(tree, "SELECTION_CB", (Icallback) feedselection_cb);
-
 	IupSetAttribute(tree, "TITLE", "Feeds");
 
 	const char *list = IupConfigGetVariableStr(config, "CAT", "LIST");
-
-	if(!list){
+	if(!list)
 		return;
-	}
 
-	char *catcopy = calloc(strlen(list), sizeof(char));
+	char *catcopy = calloc(strlen(list)+1, sizeof(char));
 	strncpy(catcopy, list, strlen(list));
-	catcopy[strlen(list)] = 0;
 
 	int commacount = 0;
 	for(int i = 0; i <= strlen(catcopy); i++)
@@ -164,8 +160,6 @@ void drawtree(void){
 
 			IupSetAttribute(tree, "ADDLEAF1", title);
 
-			remove("out");
-
 			feedtoken = strtok(NULL, ",");
 		}
 
@@ -173,7 +167,8 @@ void drawtree(void){
 	}
 
 	free(catcopy);
-	//updatefeeds();
+
+	IupSetAttribute(tree, "EXPANDALL", "NO");
 }
 
 void initfeedbox(void){
